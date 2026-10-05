@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Пять стран Латинской Америки · Парад чемпионов карнавала · 12.02–01.03.2027</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+:root{
+  --bg:#0a0e17; --bg2:#0d1322; --card:#121a2b; --card2:#16203a;
+  --line:rgba(148,163,184,.14); --line2:rgba(148,163,184,.28);
+  --text:#e8eef8; --muted:#8d9bb3; --dim:#5f6c85;
+  --acc:#f472b6; --acc2:#fbbf24; --grad:linear-gradient(120deg,#f472b6,#fbbf24);
+  --ok:#34d399; --warn:#fbbf24; --rose:#f472b6;
+  --r:12px; --r2:18px;
+  --shadow:0 10px 30px -12px rgba(2,6,23,.8);
+  --font:'Manrope',system-ui,-apple-system,'Segoe UI',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:var(--font);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+a{color:#7dd3fc;text-decoration:none}
+a:hover{text-decoration:underline}
+
+header{position:fixed;top:0;left:0;right:0;z-index:1200;padding:12px 20px;
+  background:rgba(10,14,23,.82);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.brand{display:flex;align-items:center;gap:10px}
+.brand .logo{width:34px;height:34px;border-radius:10px;background:var(--grad);display:grid;place-items:center;font-weight:800;color:#1a1204}
+.brand h1{font-size:1rem;font-weight:800;letter-spacing:-.01em}
+.brand .sub{font-size:.72rem;color:var(--muted);font-weight:500}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font-size:.72rem;font-weight:600;padding:5px 10px;border-radius:999px;
+  background:var(--card);border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.chip.hot{border-color:transparent;background:var(--grad);color:#1a1204}
+nav.tabs{margin-left:auto;display:flex;background:var(--card);border:1px solid var(--line);
+  border-radius:999px;padding:4px;gap:2px}
+.tab{border:0;background:transparent;color:var(--muted);font:600 .82rem var(--font);
+  padding:8px 16px;border-radius:999px;cursor:pointer;transition:.18s}
+.tab.active{background:var(--grad);color:#1a1204}
+
+#mapTab{position:fixed;inset:64px 0 0;display:block}
+#map{position:absolute;inset:0;background:#0b101c;z-index:1}
+#panel{position:absolute;z-index:1000;right:16px;top:16px;width:330px;max-height:calc(100% - 90px);
+  overflow:auto;background:rgba(18,26,43,.92);backdrop-filter:blur(10px);border:1px solid var(--line2);
+  border-radius:var(--r2);box-shadow:var(--shadow);padding:16px;display:none}
+#panel .tag{display:inline-block;font-size:.66rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  padding:3px 9px;border-radius:999px;background:rgba(244,114,182,.16);color:#f9a8d4}
+#panel h2{font-size:1.02rem;margin:8px 0 2px;letter-spacing:-.01em}
+#panel .days{font-size:.76rem;color:var(--muted);margin-bottom:10px}
+#panel ul{list-style:none}
+#panel li{margin:8px 0;font-size:.85rem;line-height:1.45;display:flex;gap:8px}
+#panel li::before{content:"◆";color:var(--acc2);font-size:.6rem;margin-top:5px}
+#panel .note{font-size:.76rem;color:var(--muted);line-height:1.5;margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
+#panel .close{position:absolute;top:10px;right:12px;cursor:pointer;color:var(--muted);font-size:1rem;border:0;background:none}
+#legend{position:absolute;z-index:1000;left:16px;bottom:16px;background:rgba(18,26,43,.92);
+  border:1px solid var(--line2);border-radius:10px;padding:9px 12px;font-size:.72rem;color:var(--muted);line-height:1.7}
+#legend .f{color:var(--rose)}#legend .t{color:var(--acc2)}#legend .g{color:#94a3b8}
+#legend .r{color:var(--warn)}
+.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:var(--card);color:var(--text);
+  border-radius:10px;box-shadow:var(--shadow)}
+.leaflet-popup-content{font-family:var(--font)}
+.daymarker{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;
+  background:var(--grad);color:#1a1204;font:700 .68rem var(--font);box-shadow:0 0 0 3px rgba(244,114,182,.35)}
+.daymarker.many{background:linear-gradient(120deg,#f472b6,#fbbf24)}
+.poi{width:12px;height:12px;border-radius:50%;background:var(--acc2);box-shadow:0 0 0 3px rgba(251,191,36,.25)}
+
+#planTab{display:none;position:fixed;inset:64px 0 0;overflow:auto;padding:20px 16px 60px}
+#excTab{display:none;position:fixed;inset:64px 0 0;overflow:auto;padding:20px 16px 60px}
+.wrap{max-width:880px;margin:0 auto}
+h2.sec{font-size:1.05rem;font-weight:800;letter-spacing:-.01em;margin:22px 0 10px}
+.daycard{background:var(--card);border:1px solid var(--line);border-radius:var(--r2);
+  margin:14px 0;overflow:hidden;box-shadow:var(--shadow)}
+.daycard summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:12px;
+  padding:14px 18px;user-select:none}
+.daycard summary::-webkit-details-marker{display:none}
+.daycard summary:hover{background:var(--card2)}
+.daynum{min-width:44px;height:44px;border-radius:12px;background:var(--grad);display:grid;place-items:center;
+  font-weight:800;color:#1a1204}
+.dayhead h3{font-size:.95rem;font-weight:700;letter-spacing:-.01em}
+.dayhead .meta{font-size:.72rem;color:var(--muted);margin-top:2px}
+.caret{color:var(--muted);margin-left:auto;transition:.2s}
+details[open] .caret{transform:rotate(90deg)}
+.dtxt{border-top:1px solid var(--line);padding:12px 18px 16px;font-size:.85rem;line-height:1.65;color:var(--text)}
+.dtxt .pl{color:var(--acc2);font-weight:600}
+.exc{display:flex;gap:10px;align-items:flex-start;background:var(--card);border:1px solid var(--line);
+  border-radius:var(--r);padding:11px 14px;margin:8px 0}
+.exc .ic{min-width:22px;height:22px;border-radius:7px;display:grid;place-items:center;font-size:.75rem;font-weight:800}
+.exc .ic.in{background:rgba(52,211,153,.15);color:var(--ok)}
+.exc .ic.out{background:rgba(251,191,36,.15);color:var(--warn)}
+.exc .nm{font-size:.85rem;font-weight:600}
+.exc .ds{font-size:.72rem;color:var(--muted);margin-top:2px}
+.list2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.blk{background:var(--card);border:1px solid var(--line);border-radius:var(--r2);padding:14px 16px}
+.blk h3{font-size:.85rem;font-weight:800;margin-bottom:10px}
+.blk.in h3{color:var(--ok)} .blk.no h3{color:#f87171}
+.blk ul{list-style:none;font-size:.8rem;line-height:1.6;color:var(--muted)}
+.blk ul li{margin:6px 0}
+.blk.in li::before{content:"✓ ";color:var(--ok);font-weight:800}
+.blk.no li::before{content:"✕ ";color:#f87171;font-weight:800}
+
+@media (max-width:720px){
+  header{padding:10px 12px;gap:8px}
+  nav.tabs{width:100%;margin-left:0}
+  .tab{flex:1;text-align:center;padding:9px 4px}
+  .brand h1{font-size:.9rem}
+  #mapTab{inset:118px 0 0}
+  #planTab,#excTab{inset:118px 0 0}
+  #panel{left:10px;right:10px;top:auto;bottom:10px;width:auto;max-height:54vh}
+  #legend{left:8px;bottom:8px;padding:6px 9px;font-size:.66rem}
+  .daycard summary{padding:11px 12px;gap:9px}
+  .daynum{min-width:38px;height:38px}
+  .list2{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="logo">SA</div>
+    <div><h1>Пять стран Латинской Америки</h1><div class="sub">Парад чемпионов карнавала · 12.02 — 01.03.2027 · 18 дней</div></div>
+  </div>
+  <div class="chips">
+    <span class="chip hot">5 стран · 18 дней</span>
+    <span class="chip">Рио · Игуасу · Б.-Айрес · Чили · Боливия · Перу</span>
+  </div>
+  <nav class="tabs">
+    <button class="tab active" onclick="openTab('map', this)">Карта</button>
+    <button class="tab" onclick="openTab('plan', this)">Программа по дням</button>
+    <button class="tab" onclick="openTab('exc', this)">Экскурсии и состав</button>
+  </nav>
+</header>
+
+<div id="mapTab">
+  <div id="map"></div>
+  <div id="panel">
+    <button class="close" onclick="document.getElementById('panel').style.display='none'">✕</button>
+    <div><span class="tag" id="p-tag"></span></div>
+    <h2 id="p-title"></h2>
+    <div class="days" id="p-days"></div>
+    <ul id="p-list"></ul>
+    <div class="note" id="p-note"></div>
+  </div>
+  <div id="legend">— <span class="f">перелёт (включён)</span> · — <span class="t">поезд</span> · - - <span class="g">джипы / автобус</span> · - · <span class="r">маршрут, дни 1→18</span><br>
+    ● <span class="t">достопримечательность</span></div>
+</div>
+
+<div id="planTab"><div class="wrap"><div id="days"></div></div></div>
+
+<div id="excTab"><div class="wrap">
+  <h2 class="sec">Экскурсии, включённые в стоимость (17)</h2>
+  <div id="excIn"></div>
+  <h2 class="sec">Экскурсии за дополнительную плату</h2>
+  <div id="excOut"></div>
+  <h2 class="sec">Состав тура</h2>
+  <div class="list2">
+    <div class="blk in"><h3>В стоимость входит</h3><ul id="inc"></ul></div>
+    <div class="blk no"><h3>Не входит</h3><ul id="noinc"></ul></div>
+  </div>
+</div></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const DATA = {"title": "Пять стран Латинской Америки", "subtitle": "Парад чемпионов карнавала · 12.02 — 01.03.2027 · 18 дней", "chipTotal": "5 стран · 18 дней", "chipRoute": "Рио · Игуасу · Б.-Айрес · Чили · Боливия · Перу", "places": [{"id": "rio", "name": "Рио-де-Жанейро", "lat": -22.9068, "lng": -43.1729, "days": "Дни 1–4", "tag": "Бразилия · карнавал", "sights": [["Самбодром: Парад чемпионов карнавала", "https://en.wikipedia.org/wiki/Sambadrome_Marqu%C3%AAs_de_Sapuca%C3%AD"], ["Гора Сахарная голова (канатная дорога)", "https://bondinho.com.br/"], ["Статуя Христа-Искупителя (поезд Корковадо)", "https://www.tremdocorcovado.rio/"], ["Центральные районы старого Рио", "https://en.wikipedia.org/wiki/Centro,_Rio_de_Janeiro"]]}, {"id": "igu", "name": "Фос-ду-Игуасу", "lat": -25.5163, "lng": -54.5854, "days": "Дни 4–6", "tag": "Бразилия · водопады", "sights": [["Бразильская сторона водопадов Игуасу", "https://cataratasdoiguacu.com.br/"], ["Аргентинская сторона (Глотка Дьявола)", "https://iguazuargentina.com/"], ["Макуко-сафари (лодка, доп.)", "https://macucosafari.com.br/"], ["Парк птиц (доп.)", "https://www.parquedasaves.com.br/"]]}, {"id": "bue", "name": "Буэнос-Айрес", "lat": -34.6037, "lng": -58.3816, "days": "Дни 6–8", "tag": "Аргентина", "sights": [["Обзорная экскурсия по Буэнос-Айресу", "https://en.wikipedia.org/wiki/Buenos_Aires"], ["Ла-Бока и Каминито", "https://en.wikipedia.org/wiki/La_Boca"], ["Реколета", "https://en.wikipedia.org/wiki/La_Recoleta_Cemetery"], ["Танго-шоу с ужином", "https://en.wikipedia.org/wiki/Tango"]]}, {"id": "scl", "name": "Сантьяго", "lat": -33.4489, "lng": -70.6693, "days": "Дни 8–10", "tag": "Чили", "sights": [["Обзорная экскурсия по Сантьяго", "https://en.wikipedia.org/wiki/Santiago"], ["Холм Сан-Кристобаль", "https://www.parquemet.cl"], ["Пласа-де-Армас", "https://en.wikipedia.org/wiki/Plaza_de_Armas_(Santiago)"]]}, {"id": "spd", "name": "Сан-Педро-де-Атакама", "lat": -22.9087, "lng": -68.1999, "days": "День 10", "tag": "Чили · пустыня", "sights": [["Астрономический тур в пустыне (опция)", "https://en.wikipedia.org/wiki/Atacama_Desert"], ["Лунная долина", "https://en.wikipedia.org/wiki/Valle_de_la_Luna_(Chile)"], ["Гейзеры Эль-Татио", "https://en.wikipedia.org/wiki/El_Tatio"]]}, {"id": "uyu", "name": "Уюни", "lat": -20.4597, "lng": -66.825, "days": "Дни 11–13", "tag": "Боливия", "sights": [["Тур на джипах по солончаку Уюни", "https://en.wikipedia.org/wiki/Salar_de_Uyuni"], ["«В Боливию на джипах»: переход границы", "https://en.wikipedia.org/wiki/Eduardo_Avaroa_Andean_Fauna_National_Reserve"], ["Лагуны и вулканы Альтиплано", "https://en.wikipedia.org/wiki/Altiplano"]]}, {"id": "lap", "name": "Ла-Пас", "lat": -16.4897, "lng": -68.1193, "days": "День 13", "tag": "Боливия", "sights": [["Обзорная экскурсия по Ла-Пасу", "https://en.wikipedia.org/wiki/La_Paz"], ["Канатная дорога Mi Teleférico", "https://www.miteleferico.bo"], ["Лунная долина", "https://en.wikipedia.org/wiki/Valle_de_la_Luna_(Bolivia)"]]}, {"id": "tia", "name": "Тиуанако", "lat": -16.5521, "lng": -68.6736, "days": "День 14", "tag": "Боливия", "sights": [["Руины древнего города Тиуанако", "https://en.wikipedia.org/wiki/Tiwanaku"], ["Врата Солнца", "https://en.wikipedia.org/wiki/Gateway_of_the_Sun"]]}, {"id": "pun", "name": "Пуно · оз. Титикака", "lat": -15.8402, "lng": -70.0219, "days": "День 14", "tag": "Перу", "sights": [["Плавучие острова Урос", "https://en.wikipedia.org/wiki/Uru_people"], ["Озеро Титикака", "https://en.wikipedia.org/wiki/Lake_Titicaca"]]}, {"id": "cus", "name": "Куско", "lat": -13.5319, "lng": -71.9675, "days": "Дни 15–17", "tag": "Перу", "sights": [["«Путь Солнца»: автобусный маршрут Пуно–Куско (8 ч)", "https://en.wikipedia.org/wiki/Cusco"], ["Храм Кориканча", "https://en.wikipedia.org/wiki/Coricancha"], ["Пласа-де-Армас", "https://en.wikipedia.org/wiki/Plaza_de_Armas_(Cusco)"]]}, {"id": "mp", "name": "Мачу-Пикчу", "lat": -13.1631, "lng": -72.545, "days": "День 16", "tag": "Перу", "sights": [["«Затерянный город инков» Мачу-Пикчу", "https://tuboleto.cultura.pe/llaqta_machupicchu"], ["Поезд Куско — Агуас-Кальентес", "https://www.perurail.com/"]]}, {"id": "lim", "name": "Лима", "lat": -12.0464, "lng": -77.0428, "days": "Дни 17–18", "tag": "Перу · финал", "sights": [["Обзорная экскурсия по Лиме (2,5 ч)", "https://en.wikipedia.org/wiki/Lima"], ["Исторический центр (ЮНЕСКО)", "https://whc.unesco.org/en/list/500"]]}], "legs": [{"a": "rio", "b": "igu", "kind": "flight", "name": "Рио GIG — Фос-ду-Игуасу IGU", "info": "внутренний перелёт, включён в тур · день 4", "link": ""}, {"a": "igu", "b": "bue", "kind": "flight", "name": "Игуасу — Буэнос-Айрес", "info": "внутренний перелёт, включён · день 6", "link": ""}, {"a": "bue", "b": "scl", "kind": "flight", "name": "Буэнос-Айрес — Сантьяго", "info": "внутренний перелёт, включён · день 8", "link": ""}, {"a": "scl", "b": "spd", "kind": "flight", "name": "Сантьяго — Калама (Атакама)", "info": "внутренний перелёт, включён · день 10", "link": ""}, {"a": "spd", "b": "uyu", "kind": "ground", "name": "Атакама — Уюни на джипах", "info": "переход границы Чили/Боливия · день 11", "link": ""}, {"a": "uyu", "b": "lap", "kind": "flight", "name": "Уюни — Ла-Пас", "info": "внутренний перелёт, включён · день 13", "link": ""}, {"a": "lap", "b": "tia", "kind": "ground", "name": "Ла-Пас — Тиуанако", "info": "трансфер · день 14", "link": ""}, {"a": "tia", "b": "pun", "kind": "ground", "name": "Тиуанако — Пуно", "info": "трансфер · день 14", "link": ""}, {"a": "pun", "b": "cus", "kind": "ground", "name": "Пуно — Куско", "info": "«Путь Солнца», автобус 8 ч · день 15", "link": ""}, {"a": "cus", "b": "mp", "kind": "train", "name": "Куско — Агуас-Кальентес — Мачу-Пикчу", "info": "поезд, включён · день 16", "link": "https://www.perurail.com/"}, {"a": "cus", "b": "lim", "kind": "flight", "name": "Куско — Лима", "info": "внутренний перелёт, включён · день 17", "link": ""}], "pois": [{"city": "rio", "name": "Самбодром: Парад чемпионов", "lat": -22.912, "lng": -43.1967, "kind": "sight", "link": "https://en.wikipedia.org/wiki/Sambadrome_Marqu%C3%AAs_de_Sapuca%C3%AD", "note": "день 2 · билеты включены в тур"}, {"city": "rio", "name": "Сахарная голова", "lat": -22.9492, "lng": -43.1566, "kind": "sight", "link": "https://bondinho.com.br/", "note": "день 2"}, {"city": "rio", "name": "Христос-Искупитель (Корковадо)", "lat": -22.9519, "lng": -43.2105, "kind": "sight", "link": "https://www.tremdocorcovado.rio/", "note": "день 3"}, {"city": "igu", "name": "Панорама водопадов (браз. сторона)", "lat": -25.6866, "lng": -54.4415, "kind": "sight", "link": "https://cataratasdoiguacu.com.br/", "note": "день 5"}, {"city": "igu", "name": "Глотка Дьявола (арг. сторона)", "lat": -25.6953, "lng": -54.4367, "kind": "sight", "link": "https://iguazuargentina.com/", "note": "день 6"}, {"city": "igu", "name": "Макуко-сафари (доп.)", "lat": -25.68, "lng": -54.445, "kind": "sight", "link": "https://macucosafari.com.br/", "note": "доп. экскурсия"}, {"city": "igu", "name": "Парк птиц (доп.)", "lat": -25.6153, "lng": -54.4807, "kind": "sight", "link": "https://www.parquedasaves.com.br/", "note": "доп. экскурсия"}, {"city": "bue", "name": "Пласа-де-Майо и центр", "lat": -34.6084, "lng": -58.3723, "kind": "sight", "link": "https://en.wikipedia.org/wiki/Plaza_de_Mayo", "note": "день 7"}, {"city": "bue", "name": "Ла-Бока", "lat": -34.6345, "lng": -58.3631, "kind": "sight", "link": "https://en.wikipedia.org/wiki/La_Boca", "note": "день 7"}, {"city": "bue", "name": "Танго-шоу с ужином", "lat": -34.59, "lng": -58.41, "kind": "sight", "link": "https://en.wikipedia.org/wiki/Tango", "note": "день 7 вечер · 3 ч 45 мин"}, {"city": "scl", "name": "Сан-Кристобаль", "lat": -33.4254, "lng": -70.6333, "kind": "sight", "link": "https://www.parquemet.cl", "note": "день 9"}, {"city": "scl", "name": "Пласа-де-Армас", "lat": -33.4377, "lng": -70.6505, "kind": "sight", "link": "https://en.wikipedia.org/wiki/Plaza_de_Armas_(Santiago)", "note": "день 9"}, {"city": "spd", "name": "Лунная долина", "lat": -22.9107, "lng": -68.241, "kind": "sight", "link": "https://en.wikipedia.org/wiki/Valle_de_la_Luna_(Chile)", "note": "день 10"}, {"city": "uyu", "name": "Солончак Уюни", "lat": -20.1833, "lng": -67.55, "kind": "sight", "link": "https://en.wikipedia.org/wiki/Salar_de_Uyuni", "note": "день 12 · джип-тур"}, {"city": "lap", "name": "Mi Teleférico", "lat": -16.494, "lng": -68.1475, "kind": "sight", "link": "https://www.miteleferico.bo", "note": "день 13"}, {"city": "tia", "name": "Тиуанако: Врата Солнца", "lat": -16.5554, "lng": -68.673, "kind": "sight", "link": "https://en.wikipedia.org/wiki/Gateway_of_the_Sun", "note": "день 14"}, {"city": "pun", "name": "Плавучие острова Урос", "lat": -15.806, "lng": -69.979, "kind": "sight", "link": "https://en.wikipedia.org/wiki/Uru_people", "note": "день 14"}, {"city": "cus", "name": "Кориканча", "lat": -13.5211, "lng": -71.9757, "kind": "sight", "link": "https://en.wikipedia.org/wiki/Coricancha", "note": "день 17"}, {"city": "mp", "name": "Мачу-Пикчу", "lat": -13.1631, "lng": -72.545, "kind": "sight", "link": "https://tuboleto.cultura.pe/llaqta_machupicchu", "note": "день 16 · экскурсия с гидом"}, {"city": "lim", "name": "Исторический центр Лимы", "lat": -12.0459, "lng": -77.0305, "kind": "sight", "link": "https://whc.unesco.org/en/list/500", "note": "день 18 · 2 ч 30 мин"}], "route": [[-22.9068, -43.1729], [-22.912, -43.1967], [-22.9068, -43.1729], [-22.9492, -43.1566], [-22.9068, -43.1729], [-22.9519, -43.2105], [-22.9068, -43.1729], [-25.6866, -54.4415], [-25.6953, -54.4367], [-34.6037, -58.3816], [-34.6084, -58.3723], [-34.6345, -58.3631], [-33.4489, -70.6693], [-33.4254, -70.6333], [-22.9087, -68.1999], [-20.4597, -66.825], [-20.1833, -67.55], [-20.4597, -66.825], [-16.4897, -68.1193], [-16.5521, -68.6736], [-15.8402, -70.0219], [-15.806, -69.979], [-13.5319, -71.9675], [-13.1631, -72.545], [-13.5319, -71.9675], [-13.5211, -71.9757], [-12.0464, -77.0428], [-12.0459, -77.0305]], "daysProgram": [{"day": 1, "date": "12.02", "title": "Прибытие в Рио", "place": "Рио-де-Жанейро · 3 ночи", "text": "Прибытие в Рио-де-Жанейро. Встреча в аэропорту с водителем, трансфер в отель, размещение. Свободное время."}, {"day": 2, "date": "13.02", "title": "Карнавал и Сахарная голова", "place": "Рио-де-Жанейро", "text": "Завтрак. «Гора Сахарная голова» — подъём на фуникулёре, панорама Рио. «Центральные районы старого Рио». Вечером — трансфер на Самбодром: Парад чемпионов карнавала (билеты включены). Возвращение в отель."}, {"day": 3, "date": "14.02", "title": "Христос-Искупитель", "place": "Рио-де-Жанейро", "text": "Завтрак. «Статуя Христа-Искупителя» — исторический центр и зубчатый поезд на Корковадо, панорамы города. Возвращение в отель."}, {"day": 4, "date": "15.02", "title": "Перелёт к водопадам", "place": "Фос-ду-Игуасу · 2 ночи", "text": "Завтрак, освобождение номеров. Трансфер в аэропорт, перелёт в Фос-ду-Игуасу (билет включён). Встреча, трансфер, размещение."}, {"day": 5, "date": "16.02", "title": "Водопады: бразильская сторона", "place": "Фос-ду-Игуасу", "text": "Завтрак. «Бразильская сторона водопадов Игуасу» — 275 потоков, «Глотка Дьявола» высотой 72 м. Дополнительно: Макуко-сафари, Парк птиц, полёт на вертолёте."}, {"day": 6, "date": "17.02", "title": "Водопады: Аргентина → Буэнос-Айрес", "place": "Буэнос-Айрес · 2 ночи", "text": "Завтрак, освобождение номеров. «Аргентинская сторона водопадов Игуасу». Встреча с водителем, трансфер в Буэнос-Айрес, размещение."}, {"day": 7, "date": "18.02", "title": "Буэнос-Айрес и танго", "place": "Буэнос-Айрес", "text": "Завтрак. «Обзорная экскурсия по Буэнос-Айресу». Свободное время. Вечером — «Ужин и танго-шоу в ресторане» (3 ч 45 мин)."}, {"day": 8, "date": "19.02", "title": "Перелёт в Сантьяго", "place": "Сантьяго · 2 ночи", "text": "Завтрак, освобождение номеров. Трансфер в аэропорт, перелёт в Сантьяго (билет включён). Размещение, свободное время."}, {"day": 9, "date": "20.02", "title": "Сантьяго", "place": "Сантьяго", "text": "Завтрак. «Обзорная экскурсия по Сантьяго» с осмотром главных достопримечательностей. Возвращение в отель."}, {"day": 10, "date": "21.02", "title": "Пустыня Атакама", "place": "Сан-Педро-де-Атакама · 1 ночь", "text": "Завтрак, освобождение номеров. Переезд на север Чили — Сан-Педро-де-Атакама. За дополнительную плату — астрономический тур в пустыне."}, {"day": 11, "date": "22.02", "title": "В Боливию на джипах", "place": "Уюни · 2 ночи", "text": "Завтрак. «В Боливию на джипах» — переход границы, дикая природа Альтиплано. Ночь в отеле в пустыне в стиле экспедиции."}, {"day": 12, "date": "23.02", "title": "Солончак Уюни", "place": "Уюни", "text": "Завтрак. «Тур на джипах по солончаку» — лагуны, действующий вулкан, самое большое высокогорное солёное озеро планеты. Ночь в Уюни."}, {"day": 13, "date": "24.02", "title": "Ла-Пас", "place": "Ла-Пас · 1 ночь", "text": "Завтрак, освобождение номеров. Перелёт Уюни → Ла-Пас (столица Боливии). «Обзорная экскурсия по Ла-Пасу»."}, {"day": 14, "date": "25.02", "title": "Тиуанако и острова Урос", "place": "Тиуанако — Пуно · 1 ночь", "text": "Завтрак. «Тиуанако» — руины одной из старейших цивилизаций Южной Америки. Трансфер в Пуно, размещение. «Плавучие острова Урос» на озере Титикака."}, {"day": 15, "date": "26.02", "title": "Путь Солнца", "place": "Куско", "text": "Завтрак. Трансфер на автобусе в Куско. «Путь Солнца» (8 ч) — высокогорные пейзажи и культурное наследие Анд. Размещение в отеле."}, {"day": 16, "date": "27.02", "title": "Мачу-Пикчу", "place": "Куско", "text": "Завтрак. «Мачу-Пикчу» — экскурсия в «затерянный город инков» с осмотром главных достопримечательностей. Обед. Возвращение в Куско на поезде. Размещение."}, {"day": 17, "date": "28.02", "title": "Куско → Лима", "place": "Лима · 1 ночь", "text": "Завтрак. «Обзорная экскурсия по Куско и храм Кориканча». Трансфер в аэропорт, перелёт в Лиму. Размещение в отеле."}, {"day": 18, "date": "01.03", "title": "Лима и вылет домой", "place": "—", "text": "Завтрак, освобождение номеров. «Обзорная экскурсия по Лиме» (2 ч 30 мин). Трансфер в аэропорт. Самостоятельный вылет."}], "included": ["Проживание в выбранных отелях на базе завтраков (16 ночей)", "Внутренние перелёты: Рио → Игуасу → Буэнос-Айрес → Сантьяго → Атакама; Уюни → Ла-Пас; Куско → Лима", "17 экскурсий по программе с русскоговорящим гидом", "Трансферы по программе", "Карнавальные билеты (Парад чемпионов)", "Трансфер отель — Самбодром — отель"], "notIncluded": ["Международные перелёты (Москва — Рио / Лима — Москва)", "Дополнительные экскурсии: Макуко-сафари, Парк птиц, вертолёт над Игуасу, астротур", "Входные билеты и питание на экскурсиях (если не предусмотрено иное)", "Еда и напитки во время переездов", "Медицинская страховка, визы (для россиян Бразилия/Аргентина/Чили/Боливия/Перу — без виз, проверить)"], "excursionsIn": ["Гора Сахарная голова", "Центральные районы старого Рио", "Статуя Христа-Искупителя", "Бразильская сторона водопадов Игуасу", "Аргентинская сторона водопадов Игуасу", "Обзорная экскурсия по Буэнос-Айресу", "Ужин и танго-шоу (3 ч 45 мин)", "Обзорная экскурсия по Сантьяго", "В Боливию на джипах", "Тур на джипах по солончаку", "Обзорная экскурсия по Ла-Пасу", "Тиуанако", "Плавучие острова Урос", "Путь Солнца (8 ч)", "Мачу-Пикчу", "Обзорная по Куско и храм Кориканча", "Обзорная экскурсия по Лиме (2 ч 30 мин)"], "excursionsOpt": [["Макуко-сафари", "https://macucosafari.com.br/", "лодка к водопадам Игуасу"], ["Парк птиц", "https://www.parquedasaves.com.br/", "уникальный парк рядом с Фос-ду-Игуасу"], ["Полёт на вертолёте над водопадами Игуасу", "", "панорама с высоты"], ["Астрономический тур в пустыне Атакама", "", "наблюдение за звёздами"]]};
+const byId = Object.fromEntries(DATA.places.map(p=>[p.id,p]));
+const map = L.map('map').setView([-18,-58], 4);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'© OpenStreetMap', maxZoom:18}).addTo(map);
+
+function showPlace(p){
+  document.getElementById('p-tag').textContent = p.tag;
+  document.getElementById('p-title').textContent = p.name;
+  document.getElementById('p-days').textContent = p.days;
+  document.getElementById('p-list').innerHTML = p.sights.map(s =>
+    s[1] ? `<li><span><a href="${s[1]}" target="_blank" rel="noopener">${s[0]}</a></span></li>`
+         : `<li><span style="color:var(--muted)">${s[0]}</span></li>`).join('');
+  document.getElementById('p-note').innerHTML = '';
+  document.getElementById('panel').style.display = 'block';
+}
+function showPoi(title, tag, lines, note){
+  document.getElementById('p-tag').textContent = tag;
+  document.getElementById('p-title').textContent = title;
+  document.getElementById('p-days').textContent = '';
+  document.getElementById('p-list').innerHTML = lines.map(l =>
+    l[1] ? `<li><span><a href="${l[1]}" target="_blank" rel="noopener">${l[0]}</a></span></li>`
+         : `<li><span style="color:var(--muted)">${l[0]}</span></li>`).join('');
+  document.getElementById('p-note').innerHTML = note || '';
+  document.getElementById('panel').style.display = 'block';
+}
+
+DATA.places.forEach(p=>{
+  const icon = L.divIcon({className:'', html:`<div class="daymarker ${p.days.split(',').length>2?'many':''}">${p.days.match(/\d+/)[0]}</div>`, iconSize:[24,24], iconAnchor:[12,12]});
+  L.marker([p.lat,p.lng], {icon}).addTo(map).bindPopup(`<b>${p.name}</b><br><span style="color:#8d9bb3;font-size:.8em">${p.days}</span>`).on('click', ()=>showPlace(p));
+});
+DATA.pois.forEach(o=>{
+  const icon = L.divIcon({className:'', html:`<div class="poi"></div>`, iconSize:[12,12], iconAnchor:[6,6]});
+  L.marker([o.lat,o.lng], {icon}).addTo(map)
+    .bindPopup(`<b>${o.name}</b><br><span style="color:#8d9bb3;font-size:.8em">${o.note||''}</span>`)
+    .on('click', ()=>showPoi(o.name, 'достопримечательность', o.link?[[o.name,o.link]]:[[o.name,'']], o.note));
+});
+const kindStyle = {flight:{c:'#f472b6',d:null,w:2.6}, train:{c:'#fbbf24',d:'6 8',w:2.6}, ground:{c:'#94a3b8',d:'4 7',w:2.2}};
+DATA.legs.forEach(leg=>{
+  const s = kindStyle[leg.kind];
+  const l = L.polyline([[byId[leg.a].lat,byId[leg.a].lng],[byId[leg.b].lat,byId[leg.b].lng]],
+    {color:s.c, weight:s.w, dashArray:s.d, opacity:.85}).addTo(map);
+  l.bindTooltip(`<b>${leg.name}</b>`, {sticky:true});
+  const link = leg.link ? `<br><a href="${leg.link}" target="_blank" rel="noopener">расписание ↗</a>` : '';
+  l.bindPopup(`<b>${leg.name}</b><br><span style="color:#8d9bb3;font-size:.82em">${leg.info}</span>${link}`);
+});
+L.polyline(DATA.route, {color:'#fbbf24', weight:1.8, dashArray:'3 7', opacity:.55})
+  .addTo(map).bindTooltip('<b>Маршрут: дни 1 → 18</b>', {sticky:true});
+
+/* Программа по дням */
+document.getElementById('days').innerHTML = DATA.daysProgram.map(d=>`
+  <details class="daycard" ${d.day===1?'open':''}>
+    <summary><div class="daynum">${d.day}</div>
+      <div class="dayhead"><h3>${d.date} · ${d.title}</h3><div class="meta">${d.place}</div></div>
+      <span class="caret">▸</span></summary>
+    <div class="dtxt"><span class="pl">${d.place}:</span> ${d.text}</div></details>`).join('');
+
+/* Экскурсии */
+document.getElementById('excIn').innerHTML = DATA.excursionsIn.map(e=>`
+  <div class="exc"><div class="ic in">✓</div><div><div class="nm">${e}</div></div></div>`).join('');
+document.getElementById('excOut').innerHTML = DATA.excursionsOpt.map(o=>`
+  <div class="exc"><div class="ic out">+</div><div><div class="nm">${o[0]}${o[1]?` · <a href="${o[1]}" target="_blank" rel="noopener">сайт ↗</a>`:''}</div><div class="ds">${o[2]}</div></div></div>`).join('');
+document.getElementById('inc').innerHTML = DATA.included.map(i=>`<li>${i}</li>`).join('');
+document.getElementById('noinc').innerHTML = DATA.notIncluded.map(i=>`<li>${i}</li>`).join('');
+
+function openTab(which, btn){
+  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active', b===btn));
+  document.getElementById('mapTab').style.display = which==='map' ? 'block' : 'none';
+  document.getElementById('planTab').style.display = which==='plan' ? 'block' : 'none';
+  document.getElementById('excTab').style.display = which==='exc' ? 'block' : 'none';
+  if(which==='map') setTimeout(()=>map.invalidateSize(), 60);
+}
+</script>
+</body>
+</html>
